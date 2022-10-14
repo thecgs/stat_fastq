@@ -1,42 +1,17 @@
 # stat_fastq
 这是一个统计fastq文件各类指标的工具。 
+这个工具命名为stat_fastq, 他可以定制输出的格式和指标。可以支持输入多个fastq文件，并且支持多线程执行.
 
-该项目的早期版本完全由python编写，起初，历遍fastq的代码如下：
+软件的安装：
 ```
-import sys
-import gzip
-from itertools import islice
-file =  sys.argv[1]
-
-def read_fastq(fastq:str):
-    n = 0
-    f = gzip.open(fastq, 'rb')
-    while True:
-        try:
-            name = next(islice(f,n,n+4,1)).strip().decode()
-            seq = next(islice(f,n,n+4,1)).strip().decode()
-            comment = next(islice(f,n,n+4,1)).strip().decode()
-            qual = next(islice(f,n,n+4,1)).strip().decode()
-            n += 4
-            yield (name, seq, comment, qual,n)
-        except StopIteration:
-            break
-    f.close()
-
-for l in read_fastq(file):
-    print(l)
+git clone https://github.com/thecgs/stat_fastq
+cd stat_fastq
+echo "expert PATH=$PATH:$(pwd)" >> ~/.bashrc
+source ~/.bashrc
 ```
-后来改用了第三放库`pyfastx`，快了很多，代码如下：
-```
-import pyfastx
-with pyfastx.Fastq(fastq, build_index=False) as f:
-    for read in fq:
-        name, seq, quals = read
-```
-后来是搜到了一个C++版本（ https://github.com/haiwufan/fastq_stat ），根据这个版本修改了源码（增加了一些指标），速度大幅提升。此外根据python封装了这个工具。
+`stat_fastq`文件是一个编译好的二进制文件，如果你需要重新编译，可以这样编译`g++ stat_fastq.cpp -o stat_fastq`，注意，编译完成的二进制文件需要和主程序`stat_fastq.py`在同一文件夹下
 
-
-这个工具命名为stat_fastq, 他可以定制输出的格式和指标。可以支持输入多个fastq文件，并且支持多线程执行，方法如下：
+使用方法如下：
 ```
 $ python stat_fastq.py -h
 
@@ -74,7 +49,7 @@ Option:
     -v   --version        Show the version message
 
 Note: The [option] can be anywhere
-Datetime: 2022/10/12; Author: Guisen Chen; Email: thecgs001@foxmail.com; Cite: https//www.github.com/thesg](https://github.com/thecgs/stat_fastq
+Datetime: 2022/10/12; Author: Guisen Chen; Email: thecgs001@foxmail.com; Cite: https://github.com/thecgs/stat_fastq
 ```
 
 例子一：
@@ -118,3 +93,36 @@ M3_2   96803945    14520591750  75.9509%  64.3737%        2       41  6982315472
 WT_2  106000544    15900081600  77.9955%  65.6465%        2       41  7493666735(47.1297%)  8406330226(52.8697%)   84639(0.000532318%)     150     150      150          33
 ```
 
+该项目的早期版本完全由python编写，起初，历遍fastq的代码如下：
+```
+import sys
+import gzip
+from itertools import islice
+file =  sys.argv[1]
+
+def read_fastq(fastq:str):
+    n = 0
+    f = gzip.open(fastq, 'rb')
+    while True:
+        try:
+            name = next(islice(f,n,n+4,1)).strip().decode()
+            seq = next(islice(f,n,n+4,1)).strip().decode()
+            comment = next(islice(f,n,n+4,1)).strip().decode()
+            qual = next(islice(f,n,n+4,1)).strip().decode()
+            n += 4
+            yield (name, seq, comment, qual,n)
+        except StopIteration:
+            break
+    f.close()
+
+for l in read_fastq(file):
+    print(l)
+```
+后来改用了第三放库`pyfastx`，快了很多，代码如下：
+```
+import pyfastx
+with pyfastx.Fastq(fastq, build_index=False) as f:
+    for read in fq:
+        name, seq, quals = read
+```
+后来是搜到了一个C++版本（ https://github.com/haiwufan/fastq_stat ），根据这个版本修改了源码（增加了一些指标），速度大幅提升。此外根据python封装了这个工具
