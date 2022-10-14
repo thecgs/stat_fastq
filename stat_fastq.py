@@ -1,63 +1,27 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 import os
 import re
 import sys
-import subprocess
+import gzip
+import pyfastx
 import pandas as pd
-from concurrent.futures import ProcessPoolExecutor as pool
+from concurrent.futures import ThreadPoolExecutor as pool
 
-verison = "v2.00"
 usage = f"""
-\033[36mUsage:\033[0m
-    \033[36mexample 1:\033[0m
-    {sys.argv[0]} <fastq.fofn> [option]
-    \033[36mexample 2:\033[0m
-    {sys.argv[0]} <file.fastq.gz> [option]
-    \033[36mexample 3:\033[0m
-    {sys.argv[0]} <file.fastq1.gz> [file.fastq2.gz] [file.fastq3.gz] ... [option]
-    
-\033[36mOption:\033[0m
-    -t   --Transposition  Transposition Stdout format [default: Vertical]
-    -d   --Distribution   Open output "Reads length distribution" file [default: Close]
-    -n   --Reads_Num      Close ouput Reads of Number [default: Open]
-    -b   --Reads_Base     Close ouput Reads of Bese Number [default: Open]
-    -10  --Q10            Close ouput Q10 [default: Open]
-    -20  --Q20            Close ouput Q20 [default: Open]
-    -30  --Q30            Close ouput Q30 [default: Open]
-    -40  --Q40            Close ouput Q40 [default: Open]
-    -qmi --Min_qual       Close ouput Min quality value [default: Open]
-    -qma --Max_qual       Close ouput Max quality value [default: Open]
-    -AT  --AT_Bases       Close ouput AT Beses of Number [default: Open]
-    -GC  --GC_Bases       Close ouput GC Beses of Number [default: Open]
-    -A   --A_Bases        Close ouput A Beses of Number [default: Open]
-    -T   --T_Bases        Close ouput T Beses of Number [default: Open]
-    -G   --G_Bases        Close ouput G Beses of Number [default: Open]
-    -C   --C_Bases        Close ouput C Beses of Number [default: Open]
-    -N   --N_Bases        Close ouput N Beses of Number [default: Open]
-    -lmi --Min_len        Close ouput Read length Min value [default: Open]
-    -lma --Max_len        Close ouput Read length Max value [default: Open]
-    -lme --Mean_len       Close ouput Read length Mean value [default: Open]
-    -p   --Phread_Type    Close ouput Phread Type [default: Open]
-    -h   --help           Show the help message and exit
-    -v   --version        Show the version message
-
-Note: The [option] can be anywhere
-Datetime: 2022/10/12; Author: Guisen Chen; Email: thecgs001@foxmail.com; Cite: https//www.github.com/thesgs
+usage:
+    example 1:
+    {sys.argv[0]} <file.fastq>
+    example 2:
+    {sys.argv[0]} <file.fastq.gz>
+    example 3:
+    {sys.argv[0]} <fastq.fofn>
+    example 4:
+    {sys.argv[0]} <file.fastq1.gz> [file.fastq2.gz] [file.fastq3.gz] ...
+datetime: 2022/10/12; author: Guisen Chen; email: thecgs001@foxmail.com 
 """
 
-def get_params(argv: set):
-    params = []
-    argv = set(argv)
-    for s in argv:
-        if re.findall('^-.*',s) == []:
-            pass
-        else:
-            param = re.findall('^-.*',s)[0]
-            params.append(param)
-            sys.argv.remove(param)
-    return params
+if len(sys.argv) == 1:
+    print(usage)
+    sys.exit()
 
 def prefix(name: str):
     """
@@ -76,31 +40,93 @@ def is_fofn():
                 result = False
             else:
                 result = True
-    except UnicodeDecodeError:
+    except:
         result = False
     return result
 
-def run_stat_fastq(fastq: str):
-    Sample = os.path.basename(prefix(prefix(fastq)))
-    cmd = subprocess.run(f'/usr/bin/zcat {fastq} | {os.path.dirname(sys.argv[0])}/stat_fastq -',\
-                         stdout=subprocess.PIPE, shell=True)
-    result = cmd.stdout.decode()
-    tmp = []
-    for l in result.split('\n'):
-        if l == '':
-            pass
-        else:
-            tmp.append(l.strip())
-    Base_stat_dict = {}
-    for i in range(0, 19):
-        Base_stat_dict[tmp[i].split('\t')[0]] = tmp[i].split('\t')[1]
-    stat = pd.Series(Base_stat_dict, name=Sample)
-    if "-d" in params or "--Distribution" in params:
-        with open(f'{Sample}.Reads_Length_Distribution.tsv','w') as f:
-            f.write('Reads of Length(nt)\tReads of Number\tReads of Frequence Precent(%)\n')
-            for i in range(20, len(tmp)):
-                f.write(f'{tmp[i]}\n')
-    return stat
+def stat_fastq(fastq: str):
+    """
+    统计fastq
+    """
+    fq = pyfastx.Fastq(fastq, build_index=False)
+    phread = fq.phred
+    Sample = prefix(prefix(os.path.basename(fastq)))
+    counts = {}
+    Reads_Num = 0
+    Reads_Base = 0
+    N_Bases = 0
+    A_Bases = 0 
+    T_Bases = 0
+    G_Bases = 0 
+    C_Bases = 0
+    Q10_Bases = 0
+    Q20_Bases = 0
+    Q30_Bases = 0
+    Q40_Bases = 0
+    Min_qual = 1000
+    Max_qual = 0
+    for read in fq:
+        name, seq, quals = read
+        for s in quals:
+            quali = ord(s)-phread
+            if Min_qual > quali:
+                Min_qual = quali
+            if Max_qual < quali:
+                Max_qual = quali
+            if quali >= 10:
+                Q10_Bases += 1
+            if quali >= 20:
+                Q20_Bases += 1
+            if quali >= 30:
+                Q30_Bases += 1
+            if quali >= 40:
+                Q40_Bases += 1
+        N_Bases += seq.count('N')
+        A_Bases += seq.count('A')
+        T_Bases += seq.count('T')
+        G_Bases += seq.count('G')
+        C_Bases += seq.count('C')
+        Reads_Num += 1
+        #print(Reads_Num)
+        Reads_Base += len(seq)
+        if len(seq) not in counts:
+            counts[len(seq)] = 1
+        elif len(seq) in counts:
+            counts[len(seq)] +=1
+    Min_len = min(counts.keys())
+    Max_len = max(counts.keys())
+    Mean_len = round(sum(map(lambda x: x[0]*x[1], counts.items()))/sum(counts.values()), 2)
+    Q10 = round(Q10_Bases/Reads_Base*100, 2)
+    Q20 = round(Q20_Bases/Reads_Base*100, 2)
+    Q30 = round(Q30_Bases/Reads_Base*100, 2)
+    Q40 = round(Q40_Bases/Reads_Base*100, 2)
+    N_content = round(N_Bases/Reads_Base*100, 2)
+    A_content = round(A_Bases/Reads_Base*100, 2) 
+    T_content = round(T_Bases/Reads_Base*100, 2) 
+    G_content = round(G_Bases/Reads_Base*100, 2) 
+    C_content = round(C_Bases/Reads_Base*100, 2)
+    GC_content = round((G_Bases+C_Bases)/Reads_Base*100, 2)
+    AT_content = round((A_Bases+T_Bases)/Reads_Base*100, 2)
+
+    indexs = ['Reads_Num','Reads_Base(nt)','Q10(%)','Q20(%)','Q30(%)','Q40(%)',\
+            'Min_qual','Max_qual','AT(%)','GC(%)','A(%)','T(%)','G(%)','C(%)','N(%)',\
+            'Min_len','Max_len','Mean_len','Phread_Type']
+    stat_info = [Reads_Num, Reads_Base, Q10, Q20, Q30, Q40, Min_qual, Max_qual, \
+            f'{A_Bases+T_Bases}({AT_content}%)',\
+            f'{G_Bases+C_Bases}({GC_content}%)',\
+            f'{A_Bases}({A_content}%)',\
+            f'{T_Bases}({T_content}%)',\
+            f'{G_Bases}({G_content}%)',\
+            f'{C_Bases}({C_content}%)',\
+            f'{N_Bases}({N_content}%)',\
+            Min_len, Max_len, Mean_len, phread]
+    locals()[Sample] = pd.Series(stat_info, index=indexs,name=Sample)
+    df = pd.DataFrame({'Reads of length(nt)':counts.keys(), \
+                       'Reads of number':counts.values(), \
+                       'Reads of Frequence Precent(%)':[x for x in map(lambda x: round(x/Reads_Num*100, 2), counts.values())]})
+    df = df.sort_values(by='Reads of length(nt)')
+    df.to_csv(f'{Sample}.Reads_Length_Distribution.tsv', sep='\t',index=False)
+    return locals()[Sample]
 
 def main(fastq_list: list):
     """
@@ -108,63 +134,18 @@ def main(fastq_list: list):
     """
     isfofn = is_fofn()
     if isfofn == True:
-        fofns = []
+        fqs = []
         with open(fastq_list[0]) as f:
             for l in f:
-                fofns.append(l.strip())
-        fastq_list = fofns
-    if len(fastq_list) == 1:
-        res=run_stat_fastq(fastq_list[0])
-        stat = pd.DataFrame(res).T
-    else:
-        if 4 < os.cpu_count():
-            thread = 4
-        else:
-            thread = os.cpu_count()
-        with pool(max_workers=thread) as t:
-            res = t.map(run_stat_fastq, fastq_list)
-            tmp = []
-            for i in res:
-                tmp.append(i)
-            stat = pd.DataFrame(tmp)
-    indexs = {'Reads_Num':['-n','--Reads_Num'], \
-              'Reads_Base(nt)':['-b','--Reads_Base'], \
-              'Q10(%)':['-10','--Q10'], \
-              'Q20(%)':['-20','--Q20'], \
-              'Q30(%)':['-30','--Q30'], \
-              'Q40(%)':['-40','--Q40'], \
-              'Min_qual':['-qmi', '--Min_qual'], \
-              'Max_qual':['-qma', '--Max_qual'], \
-              'AT_Bases(%)':['-AT', '--AT_Bases'], \
-              'GC_Bases(%)':['-GC', '--GC_Bases'], \
-              'A_Bases(%)':['-A', '--A_Bases'], \
-              'T_Bases(%)':['-T', '--T_Bases'], \
-              'G_Bases(%)':['-G', '--G_Bases'], \
-              'C_Bases(%)':['-C', '--C_Bases'], \
-              'N_Bases(%)':['-N', '--N_Bases'],\
-              'Min_len':['-lmi', '--Min_len'], \
-              'Max_len':['-lma', '--Max_len'], \
-              'Mean_len':['-lme', '--Mean_len'], \
-              'Phread_Type':['-p', '--Phread_Type']}
-    for key, value in indexs.items():
-        if value[0] in params or value[1] in params:
-            stat = stat.drop(str(key), axis=1)
-    if '-t' in params or '--Transposition' in params:
-        print(stat)
-    else:
-        print(stat.T)
-
-pd.set_option('display.width',1000)
-pd.set_option('display.max_columns',1000)
-params = get_params(sys.argv)
-if '-h' in params or '--help' in params:
-    print(usage)
-    sys.exit()
-if len(sys.argv) ==1 and params == []:
-    print(usage)
-    sys.exit()
-if '-v' in params or '--verison' in params:
-    print(verison)
-    sys.exit()
+                fqs.append(l.strip())
+            fastq_list = fqs
+    with pool(max_workers=4) as t:
+        res = t.map(stat_fastq, fastq_list)
+        tmp = []
+        for i in res:
+            tmp.append(i)
+    stat = pd.DataFrame(tmp)
+    stat.T.to_csv(f'Reads_stat_.tsv', sep='\t')
+    print(stat.T)
 
 main(sys.argv[1:])
