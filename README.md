@@ -110,7 +110,7 @@ def read_fastq(fastq:str):
             comment = next(islice(f,n,n+4,1)).strip().decode()
             qual = next(islice(f,n,n+4,1)).strip().decode()
             n += 4
-            yield (name, seq, comment, qual,n)
+            yield (name, seq, puls, qual)
         except StopIteration:
             break
     f.close()
