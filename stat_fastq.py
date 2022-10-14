@@ -44,7 +44,7 @@ usage = f"""
     -v   --version        Show the version message
 
 Note: The [option] can be anywhere
-Datetime: 2022/10/12; Author: Guisen Chen; Email: thecgs001@foxmail.com; Cite: https//www.github.com/thesgs
+Datetime: 2022/10/12; Author: Guisen Chen; Email: thecgs001@foxmail.com; Cite: https://github.com/thecgs/stat_fastq
 """
 
 def get_params(argv: set):
