@@ -1,6 +1,6 @@
 # stat_fastq
 这是一个统计fastq文件各类指标的工具。 
-这个工具命名为stat_fastq, 他可以定制输出的格式和指标。可以支持输入多个fastq文件，并且支持多线程执行.
+这个工具命名为stat_fastq, 他可以定制输出的格式和指定输出指标。可以支持输入多个fastq文件，并且支持多线程执行.
 
 软件的安装：
 ```
@@ -118,11 +118,11 @@ def read_fastq(fastq:str):
 for l in read_fastq(file):
     print(l)
 ```
-后来改用了第三放库`pyfastx`，快了很多，代码如下：
+之后改用了第三放库`pyfastx`，快了很多，代码如下：
 ```
 import pyfastx
 with pyfastx.Fastq(fastq, build_index=False) as f:
     for read in fq:
         name, seq, quals = read
 ```
-后来是搜到了一个C++版本（ https://github.com/haiwufan/fastq_stat ），根据这个版本修改了源码（增加了一些指标），速度大幅提升。此外根据python封装了这个工具
+再后来搜到了一个C++版本（ https://github.com/haiwufan/fastq_stat ），根据这个版本修改了源码（增加了一些指标），速度大幅提升。并且根据python封装了这个工具
