@@ -5,7 +5,7 @@
 软件的安装：
 ```
 git clone https://github.com/thecgs/stat_fastq
-cd stat_fastq
+cd stat_fastq; chmod 755 stat_fastq; chmod 755 stat_fastq.py
 echo "expert PATH=$PATH:$(pwd)" >> ~/.bashrc
 source ~/.bashrc
 ```
