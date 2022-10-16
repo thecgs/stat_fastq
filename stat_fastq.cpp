@@ -1,5 +1,4 @@
 #include <map>
-#include <zlib.h>
 #include<stdio.h>
 #include <iostream>
 #include <iomanip>
@@ -32,7 +31,7 @@ class Stats {
         unsigned int min_qual;
         unsigned int max_qual;
         vector<unsigned long> qual_vector;
-        unsigned long q10, q20, q30, q40;
+        unsigned long q10, q20, q30, q40, q50;
         
         // initialize
         void init(void) {
@@ -48,7 +47,7 @@ class Stats {
             max_qual = 0;
             min_phred = 1000;
             max_phred = 0;
-            q10 = q20 = q30 = q40 = 0;
+            q10 = q20 = q30 = q40 = q50 = 0;
             qual_vector.resize(127,0);
             phred = 33;
         }
@@ -92,7 +91,7 @@ class Stats {
             for (map<unsigned int, unsigned long int>::iterator it = len_counts.begin(); it != len_counts.end(); it++) {
                 //cout << it -> first << it -> second << it -> second/read_total
                 //printf(it->second, read_total);
-                printf("%d\t%d\t%.4f(%)\n", it->first, it->second, (double)((*it).second*100)/read_total);
+                printf("%d\t%d\t%.4f\n", it->first, it->second, (double)((*it).second*100)/read_total);
                 }
         }
         
@@ -109,17 +108,20 @@ class Stats {
         
         void qual_stats(void) {
             int index = 0;
-            for(int i=10;i<=41;i+=1){
+            for(int i=10;i<=51;i+=1){
                 index=i+phred;
                 q10+=qual_vector[index];
                 if(i>=20){
-                    q20+=qual_vector[index];
+                    q20 += qual_vector[index];
                 }
                 if(i>=30){
-                    q30+=qual_vector[index];
+                    q30 += qual_vector[index];
                 }
                 if(i>=40){
-                    q40+=qual_vector[index];
+                    q40 += qual_vector[index];
+                }
+                if (i >= 50) {
+                    q50 += qual_vector[index];
                 }
             }
         }
@@ -131,6 +133,7 @@ class Stats {
             double q20_percent = q20 * 100.0 / base_total;
             double q30_percent = q30 * 100.0 / base_total;
             double q40_percent = q40 * 100.0 / base_total;
+            double q50_percent = q50 * 100.0 / base_total;
             double AT_percent = (base_A + base_T) * 100.0 / base_total;
             double GC_percent = (base_C + base_G) * 100.0 / base_total;
             double A_percent = (base_A * 100.0) / base_total;
@@ -148,6 +151,7 @@ class Stats {
             cout << "Q20(%)\t" << q20_percent << "%" << "\n";
             cout << "Q30(%)\t" << q30_percent << "%" << "\n";
             cout << "Q40(%)\t" << q40_percent << "%" << "\n";
+            cout << "Q50(%)\t" << q50_percent << "%" << "\n";
             cout << "Min_qual\t" << min_qual - phred << "\n";
             cout << "Max_qual\t" << max_qual - phred << "\n";
             cout << "AT_Bases(%)\t" << base_A + base_T << "(" << AT_percent << "%)" << "\n";
@@ -166,7 +170,7 @@ class Stats {
 /*
 
 	Author: 	haiwufan; Guisen, Chen
-	citation： 	https://github.com/rpetit3/fastq-stats; https://github.com/thecgs
+	citation： 	https://github.com/rpetit3/fastq-stats; https://github.com/thecgs/stat_fastq
 
 */
 

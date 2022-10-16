@@ -4,9 +4,12 @@
 import os
 import re
 import sys
+import warnings
 import subprocess
 import pandas as pd
+from plotnine import *
 from concurrent.futures import ProcessPoolExecutor as pool
+
 
 verison = "v2.00"
 usage = f"""
@@ -21,12 +24,14 @@ usage = f"""
 \033[36mOption:\033[0m
     -t   --Transposition  Transposition Stdout format [default: Vertical]
     -d   --Distribution   Open output "Reads length distribution" file [default: Close]
+    -g   --ggplot         Drawing Reads length distribution plot [default: Close]
     -n   --Reads_Num      Close ouput Reads of Number [default: Open]
     -b   --Reads_Base     Close ouput Reads of Bese Number [default: Open]
     -10  --Q10            Close ouput Q10 [default: Open]
     -20  --Q20            Close ouput Q20 [default: Open]
     -30  --Q30            Close ouput Q30 [default: Open]
     -40  --Q40            Close ouput Q40 [default: Open]
+    -50  --Q50            Close ouput Q50 [default: Open]
     -qmi --Min_qual       Close ouput Min quality value [default: Open]
     -qma --Max_qual       Close ouput Max quality value [default: Open]
     -AT  --AT_Bases       Close ouput AT Beses of Number [default: Open]
@@ -82,7 +87,7 @@ def is_fofn():
 
 def run_stat_fastq(fastq: str):
     Sample = os.path.basename(prefix(prefix(fastq)))
-    cmd = subprocess.run(f'/usr/bin/zcat {fastq} | {os.path.dirname(sys.argv[0])}/stat_fastq -',\
+    cmd = subprocess.run(f'/usr/bin/zcat {fastq} | {sys.path[0]}/stat_fastq -',\
                          stdout=subprocess.PIPE, shell=True)
     result = cmd.stdout.decode()
     tmp = []
@@ -92,14 +97,28 @@ def run_stat_fastq(fastq: str):
         else:
             tmp.append(l.strip())
     Base_stat_dict = {}
-    for i in range(0, 19):
+    for i in range(0, 20):
         Base_stat_dict[tmp[i].split('\t')[0]] = tmp[i].split('\t')[1]
     stat = pd.Series(Base_stat_dict, name=Sample)
     if "-d" in params or "--Distribution" in params:
-        with open(f'{Sample}.Reads_Length_Distribution.tsv','w') as f:
+        with open(f'{Sample}_Reads_Length_Distribution.tsv','w') as f:
             f.write('Reads of Length(nt)\tReads of Number\tReads of Frequence Precent(%)\n')
-            for i in range(20, len(tmp)):
+            for i in range(21, len(tmp)):
                 f.write(f'{tmp[i]}\n')
+        if "-g" in params or "--ggplot" in params:
+            data = pd.read_csv(f'{Sample}_Reads_Length_Distribution.tsv', sep='\t')
+            p1 = ggplot(data, aes(x="Reads of Length(nt)", y="Reads of Number")) \
+                 + geom_bar(stat='identity', fill='#5ab4ac') \
+                 + ggtitle('Reads Length Distribution')
+            p2 = ggplot(data, aes(x="Reads of Length(nt)", y="Reads of Frequence Precent(%)")) \
+                + geom_bar(stat='identity', fill='#5ab4ac') \
+                + ggtitle('Reads Length Distribution')
+            with warnings.catch_warnings():
+              warnings.simplefilter("ignore")
+              ggsave(p1, f'{Sample}_Reads_of_Number_Distribution.png')
+              ggsave(p1, f'{Sample}_Reads_of_Number_Distribution.pdf')
+              ggsave(p2, f'{Sample}_Reads_of_Frequence_Distribution.png')
+              ggsave(p2, f'{Sample}_Reads_of_Frequence_Distribution.pdf')
     return stat
 
 def main(fastq_list: list):
@@ -133,6 +152,7 @@ def main(fastq_list: list):
               'Q20(%)':['-20','--Q20'], \
               'Q30(%)':['-30','--Q30'], \
               'Q40(%)':['-40','--Q40'], \
+              'Q50(%)':['-50','--Q50'], \
               'Min_qual':['-qmi', '--Min_qual'], \
               'Max_qual':['-qma', '--Max_qual'], \
               'AT_Bases(%)':['-AT', '--AT_Bases'], \
