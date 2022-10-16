@@ -19,9 +19,9 @@ Usage:
     example 1:
     /nfs1/public2/User/chenguisen/01.biosoftware/stat_fastq/stat_fastq.py <fastq.fofn> [option]
     example 2:
-    /nfs1/public2/User/chenguisen/01.biosoftware/stat_fastq/stat_fastq.py <file.fastq.gz> [option]
+    /nfs1/public2/User/chenguisen/01.biosoftware/stat_fastq/stat_fastq.py <file.fq.gz> [option]
     example 3:
-    /nfs1/public2/User/chenguisen/01.biosoftware/stat_fastq/stat_fastq.py <file.fastq1.gz> [file.fastq2.gz] [file.fastq3.gz] ... [option]
+    /nfs1/public2/User/chenguisen/01.biosoftware/stat_fastq/stat_fastq.py <file1.fq.gz> [file2.fq.gz] [file3.fq.gz] ... [option]
 
 Option:
     -t   --Transposition  Transposition Stdout format [default: Vertical]
