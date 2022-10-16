@@ -17,9 +17,9 @@ usage = f"""
     \033[36mexample 1:\033[0m
     {sys.argv[0]} <fastq.fofn> [option]
     \033[36mexample 2:\033[0m
-    {sys.argv[0]} <file.fastq.gz> [option]
+    {sys.argv[0]} <file.fq.gz> [option]
     \033[36mexample 3:\033[0m
-    {sys.argv[0]} <file.fastq1.gz> [file.fastq2.gz] [file.fastq3.gz] ... [option]
+    {sys.argv[0]} <file1.fq.gz> [file2.fq.gz] [file3.fq.gz] ... [option]
     
 \033[36mOption:\033[0m
     -t   --Transposition  Transposition Stdout format [default: Vertical]
