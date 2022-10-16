@@ -120,7 +120,7 @@ def read_fastq(fastq:str):
 for l in read_fastq(file):
     print(l)
 ```
-之后改用了第三放库`pyfastx`，快了很多，代码如下：
+之后改用了第三方库`pyfastx`，快了很多，代码如下：
 ```
 import pyfastx
 with pyfastx.Fastq(fastq, build_index=False) as f:
