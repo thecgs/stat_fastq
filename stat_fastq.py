@@ -10,7 +10,6 @@ import pandas as pd
 from plotnine import *
 from concurrent.futures import ProcessPoolExecutor as pool
 
-
 verison = "v2.00"
 usage = f"""
 \033[36mUsage:\033[0m
