@@ -4,7 +4,7 @@
 
 软件的安装：
 ```
-git clone https://github.com/thecgs/stat_fastq
+git clone https://github.com/thecgs/stat_fastq.git
 bash ./stat_fastq/INSTALL.sh
 ```
 `stat_fastq`文件是一个编译好的二进制文件，如果你需要重新编译，可以这样编译`g++ stat_fastq.cpp -o stat_fastq`，注意，编译完成的二进制文件需要和主程序`stat_fastq.py`在同一文件夹下
