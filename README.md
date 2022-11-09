@@ -22,6 +22,7 @@ Usage:
     /nfs1/public2/User/chenguisen/01.biosoftware/stat_fastq/stat_fastq.py <file1.fq.gz> [file2.fq.gz] [file3.fq.gz] ... [option]
 
 Option:
+    -o   --output         Save output file of tsv format [default: Close]
     -t   --Transposition  Transposition Stdout format [default: Vertical]
     -d   --Distribution   Open output "Reads length distribution" file [default: Close]
     -g   --ggplot         Drawing Reads length distribution plot [default: Close]
