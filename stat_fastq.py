@@ -21,6 +21,7 @@ usage = f"""
     {sys.argv[0]} <file1.fq.gz> [file2.fq.gz] [file3.fq.gz] ... [option]
     
 \033[36mOption:\033[0m
+    -o   --output         Save output file of tsv format [default: Close]
     -t   --Transposition  Transposition Stdout format [default: Vertical]
     -d   --Distribution   Open output "Reads length distribution" file [default: Close]
     -g   --ggplot         Drawing Reads length distribution plot [default: Close]
@@ -171,7 +172,10 @@ def main(fastq_list: list):
     if '-t' in params or '--Transposition' in params:
         print(stat)
     else:
-        print(stat.T)
+        stat = stat.T
+        print(stat)
+    if '-o' in params or '--output' in params:
+        stat.to_csv('out.tsv', sep='\t')
 
 pd.set_option('display.width',1000)
 pd.set_option('display.max_columns',1000)
